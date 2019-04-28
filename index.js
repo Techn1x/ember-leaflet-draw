@@ -5,7 +5,7 @@ const path = require('path');
 const Funnel = require('broccoli-funnel');
 
 module.exports = {
-  name: 'ember-leaflet-draw',
+  name: 'ember-leaflet-draw-control',
 
   treeForVendor: function() {
     let dist = path.join(this.pathBase('leaflet-draw'), 'dist');
