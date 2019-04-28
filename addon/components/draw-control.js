@@ -50,6 +50,8 @@ export default BaseLayer.extend({
   addToContainer() {
     if(this._layer) {
       this.get('parentComponent')._layer.addLayer(this._layer);
+      let onLoadAction = this.get('onLoad');
+      if(onLoadAction) onLoadAction(this);
     }
   },
 
@@ -174,11 +176,11 @@ export default BaseLayer.extend({
 		this._argObservers = {};
 
 		this._argObservers['draw'] = this._drawChanged();
-		this.addObserver('draw', this, this._argObservers['draw']);
+		this.addObserver('draw.@each.shapeOptions', this, this._argObservers['draw']);
 	},
 
 	_removeObservers() {
-		this.removeObserver('draw', this, this._argObservers['draw']);
+		this.removeObserver('draw.@each.shapeOptions', this, this._argObservers['draw']);
 		this._argObservers = {};
 	},
 	
@@ -189,16 +191,16 @@ export default BaseLayer.extend({
 			if(_drawControl) {
 				_drawControl.setDrawingOptions(value);	// Set draw options for all new shapes
 				
-				// // Set draw options for all previously drawn shapes
-				// let _drawingLayerGroup = this.get('_drawingLayerGroup');
-				// if(_drawingLayerGroup) {
-				// 	// Remove each layer, modify the options, then re-add it
-				// 	_drawingLayerGroup.eachLayer(function(layer) {
-				// 		_drawingLayerGroup.removeLayer(layer);
-				// 		this._applyOptionsToLayer(layer);
-				// 		_drawingLayerGroup.addLayer(layer);
-				// 	}, this);
-				// }
+				// Set draw options for all previously drawn shapes
+				let _drawingLayerGroup = this.get('_drawingLayerGroup');
+				if(_drawingLayerGroup) {
+					// Remove each layer, modify the options, then re-add it
+					_drawingLayerGroup.eachLayer(function(layer) {
+						_drawingLayerGroup.removeLayer(layer);
+						this._applyOptionsToLayer(layer);
+						_drawingLayerGroup.addLayer(layer);
+					}, this);
+				}
 			}
 	}
 
