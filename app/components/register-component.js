@@ -1,4 +1,4 @@
 export {
   default,
   initialize
-} from "ember-leaflet-polyline-decorator/instance-initializers/register-component";
+} from "ember-leaflet-draw-control/instance-initializers/register-component";

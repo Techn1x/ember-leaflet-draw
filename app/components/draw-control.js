@@ -1,1 +1,1 @@
-export { default } from 'ember-leaflet-draw/components/draw-control';
+export { default } from 'ember-leaflet-draw-control/components/draw-control';
