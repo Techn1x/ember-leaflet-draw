@@ -1,5 +1,8 @@
-import Ember from 'ember';
 import BaseLayer from 'ember-leaflet/components/base-layer';
+import { computed } from '@ember/object';
+import { run } from '@ember/runloop';
+import { camelize, classify } from '@ember/string';
+import { assign } from '@ember/polyfills';
 
 export default BaseLayer.extend({
   enableDeleting: true, // Default value
@@ -11,7 +14,7 @@ export default BaseLayer.extend({
 	// Keep a reference to the drawing group, so that layers can be modified layer
 	_drawingLayerGroup: undefined,
 
-  leafletEvents: [
+  leafletEvents: Object.freeze([
     L.Draw.Event.CREATED,
     L.Draw.Event.EDITED,
     L.Draw.Event.EDITMOVE,
@@ -25,21 +28,21 @@ export default BaseLayer.extend({
     L.Draw.Event.DRAWSTART,
     L.Draw.Event.DRAWSTOP,
     L.Draw.Event.DRAWVERTEX
-  ],
+  ]),
 
-  leafletOptions: [
+  leafletOptions: Object.freeze([
     'draw',
     'edit',
     'enableEditing',
     'position',
     'showDrawingLayer'
-  ],
+  ]),
 
-  usedLeafletEvents: Ember.computed('leafletEvents', function() {
+  usedLeafletEvents: computed('leafletEvents', function() {
     return this.get('leafletEvents').filter(eventName => {
-      eventName = Ember.String.camelize(eventName.replace(':', ' '));
+      eventName = camelize(eventName.replace(':', ' '));
       const methodName = '_' + eventName;
-      const actionName = 'on' + Ember.String.classify(eventName);
+      const actionName = 'on' + classify(eventName);
       return this.get(methodName) !== undefined || this.get(actionName) !== undefined;
     });
   }),
@@ -79,9 +82,9 @@ export default BaseLayer.extend({
         options.position = 'topleft';
       }
 
-      // options.edit = Ember.$.extend(true, {featureGroup: this._layer}, options.edit);
+      // options.edit = assign(true, {featureGroup: this._layer}, options.edit);
       if(this._layer) {
-        options.edit = Ember.$.extend(true, {featureGroup: this._layer}, options.edit);
+        options.edit = assign(true, {featureGroup: this._layer}, options.edit);
         if(!this.get('enableEditing') && !options.edit.edit) {
           options.edit.edit = false;
         }
@@ -91,7 +94,7 @@ export default BaseLayer.extend({
         }
 
         // Extend the default draw object with options overrides
-        options.draw = Ember.$.extend({}, this.L.drawLocal.draw, options.draw);
+        options.draw = assign({}, this.L.drawLocal.draw, options.draw);
         // Add the draw control to the map
         let _drawControl = new this.L.Control.Draw(options);
 				map.addControl(_drawControl);
@@ -114,7 +117,7 @@ export default BaseLayer.extend({
 		// Currently just uses its own options set, since we can't tell what shape it is (or can we?)
     shapeOptions = this.get('draw.initial.shapeOptions');
 
-		let drawConfig = Ember.$.extend({}, layer.options, shapeOptions);
+		let drawConfig = assign({}, layer.options, shapeOptions);
 		layer.options = drawConfig;
 	},
 
@@ -124,17 +127,17 @@ export default BaseLayer.extend({
       const originalEventName = eventName;
       const map = this.get('parentComponent._layer');
       // Cleanup the Leaflet Draw event names that have colons, ex:'draw:created'
-      eventName = Ember.String.camelize(eventName.replace(':', ' '));
-      const actionName = 'on' + Ember.String.classify(eventName);
+      eventName = camelize(eventName.replace(':', ' '));
+      const actionName = 'on' + classify(eventName);
       const methodName = '_' + eventName;
       // Create an event handler that runs the function inside an event loop.
       this._eventHandlers[originalEventName] = function(e) {
-        Ember.run(() => {
+        run(() => {
           // Try to invoke/send an action for this event
           this.invokeAction(actionName, e, this._layer, map);
           // Allow classes to add custom logic on events as well
           if(typeof this[methodName] === 'function') {
-            Ember.run(this, this[methodName], e, this._layer, map);
+            run(this, this[methodName], e, this._layer, map);
           }
         });
       };
@@ -170,7 +173,7 @@ export default BaseLayer.extend({
 	_addObservers() {
 		this._argObservers = {};
 
-		this._argObservers['draw'] = function() { this._drawChanged(); };
+		this._argObservers['draw'] = this._drawChanged();
 		this.addObserver('draw', this, this._argObservers['draw']);
 	},
 
